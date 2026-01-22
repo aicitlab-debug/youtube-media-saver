@@ -29,13 +29,6 @@ export function Header() {
             </a>
           </nav>
 
-          {/* CTA */}
-          <Button variant="glass" size="sm" asChild>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer">
-              <Github className="w-4 h-4" />
-              <span className="hidden sm:inline">Star on GitHub</span>
-            </a>
-          </Button>
         </div>
       </div>
     </header>

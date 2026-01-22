@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { toast } from "sonner";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { UrlInput } from "@/components/UrlInput";
@@ -9,15 +8,25 @@ import { VideoPreview } from "@/components/VideoPreview";
 import { ProgressBar } from "@/components/ProgressBar";
 import { LicenseWarning } from "@/components/LicenseWarning";
 import { Features } from "@/components/Features";
+import { useYoutubeDownload } from "@/hooks/useYoutubeDownload";
 
 const Index = () => {
   const [url, setUrl] = useState("");
   const [format, setFormat] = useState<Format>("mp3");
   const [quality, setQuality] = useState("320");
-  const [isProcessing, setIsProcessing] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [pendingUrl, setPendingUrl] = useState("");
+
+  const { 
+    isLoading, 
+    isComplete, 
+    downloadResult, 
+    error, 
+    startDownload, 
+    triggerDownload, 
+    reset 
+  } = useYoutubeDownload();
 
   const handleUrlSubmit = (submittedUrl: string) => {
     setPendingUrl(submittedUrl);
@@ -28,26 +37,15 @@ const Index = () => {
     setShowWarning(false);
     setUrl(pendingUrl);
     setShowPreview(true);
-    setIsProcessing(true);
-  };
-
-  const handleComplete = () => {
-    toast.success("Conversion complete! Ready to download.");
-  };
-
-  const handleDownload = () => {
-    toast.info("Demo mode: In production, this would download your file.", {
-      description: "Connect a backend service to enable actual downloads.",
-    });
+    startDownload(pendingUrl, format, quality);
   };
 
   const handleReset = () => {
     setUrl("");
     setShowPreview(false);
-    setIsProcessing(false);
     setPendingUrl("");
+    reset();
   };
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -82,7 +80,7 @@ const Index = () => {
 
           {/* URL Input */}
           <div className="mb-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <UrlInput onSubmit={handleUrlSubmit} isLoading={isProcessing} />
+            <UrlInput onSubmit={handleUrlSubmit} isLoading={isLoading} />
           </div>
 
           {/* Format & Quality selectors */}
@@ -106,12 +104,14 @@ const Index = () => {
               </div>
 
               <ProgressBar
-                isProcessing={isProcessing}
-                onComplete={handleComplete}
-                onDownload={handleDownload}
+                isLoading={isLoading}
+                isComplete={isComplete}
+                onDownload={triggerDownload}
+                error={error}
+                title={downloadResult?.title}
               />
 
-              {!isProcessing && (
+              {!isLoading && (
                 <div className="text-center">
                   <button
                     onClick={handleReset}

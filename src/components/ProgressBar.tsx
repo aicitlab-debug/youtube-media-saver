@@ -1,75 +1,47 @@
-import { useEffect, useState } from "react";
 import { Check, Download, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 
 interface ProgressBarProps {
-  isProcessing: boolean;
-  onComplete: () => void;
+  isLoading: boolean;
+  isComplete: boolean;
   onDownload: () => void;
+  error: string | null;
+  title?: string;
 }
 
 const stages = [
-  { label: "Fetching video info", duration: 1500 },
-  { label: "Extracting media", duration: 2000 },
-  { label: "Converting format", duration: 2500 },
-  { label: "Preparing download", duration: 1000 },
+  { label: "Fetching video info" },
+  { label: "Extracting media" },
+  { label: "Converting format" },
+  { label: "Preparing download" },
 ];
 
-export function ProgressBar({ isProcessing, onComplete, onDownload }: ProgressBarProps) {
-  const [progress, setProgress] = useState(0);
-  const [currentStage, setCurrentStage] = useState(0);
-  const [isComplete, setIsComplete] = useState(false);
-
-  useEffect(() => {
-    if (!isProcessing) {
-      setProgress(0);
-      setCurrentStage(0);
-      setIsComplete(false);
-      return;
-    }
-
-    let totalTime = 0;
-    const totalDuration = stages.reduce((acc, s) => acc + s.duration, 0);
-    
-    stages.forEach((stage, index) => {
-      setTimeout(() => {
-        setCurrentStage(index);
-      }, totalTime);
-      totalTime += stage.duration;
-    });
-
-    // Animate progress
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev + 1;
-        if (next >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setIsComplete(true);
-            onComplete();
-          }, 300);
-          return 100;
-        }
-        return next;
-      });
-    }, totalDuration / 100);
-
-    return () => clearInterval(interval);
-  }, [isProcessing, onComplete]);
-
-  if (!isProcessing && !isComplete) return null;
+export function ProgressBar({ isLoading, isComplete, onDownload, error, title }: ProgressBarProps) {
+  if (!isLoading && !isComplete && !error) return null;
 
   return (
     <div className="w-full max-w-2xl mx-auto animate-fade-in">
       <div className="glass-card rounded-2xl p-6">
-        {!isComplete ? (
+        {error ? (
+          <div className="text-center py-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/20 text-destructive mb-4">
+              <span className="text-2xl">✕</span>
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              Conversion Failed
+            </h3>
+            <p className="text-muted-foreground mb-2">
+              {error}
+            </p>
+          </div>
+        ) : isLoading ? (
           <>
-            {/* Progress bar */}
+            {/* Progress bar with indeterminate animation */}
             <div className="relative h-3 bg-secondary rounded-full overflow-hidden mb-4">
               <div
-                className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-accent to-orange-400 rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${progress}%` }}
+                className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-accent to-orange-400 rounded-full animate-pulse"
+                style={{ width: '60%' }}
               />
               {/* Shimmer effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_2s_infinite]" />
@@ -80,12 +52,9 @@ export function ProgressBar({ isProcessing, onComplete, onDownload }: ProgressBa
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
                 <span className="text-sm text-foreground">
-                  {stages[currentStage]?.label || "Processing..."}
+                  Processing video...
                 </span>
               </div>
-              <span className="text-sm font-mono text-muted-foreground">
-                {progress}%
-              </span>
             </div>
 
             {/* Stage indicators */}
@@ -94,18 +63,14 @@ export function ProgressBar({ isProcessing, onComplete, onDownload }: ProgressBa
                 <div
                   key={stage.label}
                   className={cn(
-                    "flex-1 h-1 rounded-full transition-all duration-500",
-                    index < currentStage
-                      ? "bg-primary"
-                      : index === currentStage
-                      ? "bg-primary/50"
-                      : "bg-secondary"
+                    "flex-1 h-1 rounded-full transition-all duration-500 bg-primary/30 animate-pulse"
                   )}
+                  style={{ animationDelay: `${index * 0.2}s` }}
                 />
               ))}
             </div>
           </>
-        ) : (
+        ) : isComplete ? (
           <div className="text-center py-4">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 text-green-500 mb-4">
               <Check className="w-8 h-8" />
@@ -113,6 +78,11 @@ export function ProgressBar({ isProcessing, onComplete, onDownload }: ProgressBa
             <h3 className="text-xl font-semibold text-foreground mb-2">
               Conversion Complete!
             </h3>
+            {title && (
+              <p className="text-muted-foreground mb-2 text-sm truncate max-w-md mx-auto">
+                {title}
+              </p>
+            )}
             <p className="text-muted-foreground mb-6">
               Your file is ready to download
             </p>
@@ -121,7 +91,7 @@ export function ProgressBar({ isProcessing, onComplete, onDownload }: ProgressBa
               Download File
             </Button>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

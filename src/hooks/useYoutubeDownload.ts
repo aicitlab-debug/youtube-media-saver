@@ -59,15 +59,18 @@ export function useYoutubeDownload(): UseYoutubeDownloadReturn {
 
   const triggerDownload = () => {
     if (downloadResult?.downloadUrl) {
-      // Open download in new tab
-      const link = document.createElement('a');
-      link.href = downloadResult.downloadUrl;
-      link.target = '_blank';
-      link.download = `${downloadResult.title}.${downloadResult.format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success("Download started!");
+      // Cross-origin downloads often ignore the `download` attribute.
+      // Opening a new tab is the most reliable UX; the user can then save the file.
+      const opened = window.open(downloadResult.downloadUrl, "_blank", "noopener,noreferrer");
+
+      if (!opened) {
+        toast.error("Popup blocked", {
+          description: "Please allow popups for this site, then click Download again.",
+        });
+        return;
+      }
+
+      toast.success("Download opened in a new tab");
     }
   };
 

@@ -56,15 +56,15 @@ serve(async (req) => {
 
     // Use YouTube MP3 API for audio, different endpoint for video
     if (format === 'mp3') {
-      // Get download URL from YouTube MP3 API
-      const apiUrl = `https://youtube-mp3-downloader2.p.rapidapi.com/ytmp3/ytmp3/?url=${encodeURIComponent(videoUrl)}`;
+      // Get download URL from YouTube MP310 API
+      const apiUrl = `https://youtube-mp310.p.rapidapi.com/download/mp3?url=${encodeURIComponent(videoUrl)}`;
       
-      console.log('Calling YouTube MP3 API...');
+      console.log('Calling YouTube MP310 API for MP3...');
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'x-rapidapi-key': RAPIDAPI_KEY,
-          'x-rapidapi-host': 'youtube-mp3-downloader2.p.rapidapi.com',
+          'x-rapidapi-host': 'youtube-mp310.p.rapidapi.com',
         },
       });
 
@@ -80,8 +80,8 @@ serve(async (req) => {
       const data = await response.json();
       console.log('API response:', JSON.stringify(data));
 
-      // The API typically returns a download link
-      const downloadUrl = data.dlink || data.link || data.url || data.download_url;
+      // The API returns downloadUrl in the response
+      const downloadUrl = data.downloadUrl || data.dlink || data.link || data.url;
       const title = data.title || 'YouTube Audio';
 
       if (!downloadUrl) {
@@ -103,15 +103,15 @@ serve(async (req) => {
       );
 
     } else {
-      // For MP4 video downloads, use a video download API
-      const apiUrl = `https://youtube-mp36.p.rapidapi.com/dl?id=${videoId}`;
+      // For MP4 video downloads, use the same API with mp4 endpoint
+      const apiUrl = `https://youtube-mp310.p.rapidapi.com/download/mp4?url=${encodeURIComponent(videoUrl)}`;
       
-      console.log('Calling YouTube MP4 API...');
+      console.log('Calling YouTube MP310 API for MP4...');
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'x-rapidapi-key': RAPIDAPI_KEY,
-          'x-rapidapi-host': 'youtube-mp36.p.rapidapi.com',
+          'x-rapidapi-host': 'youtube-mp310.p.rapidapi.com',
         },
       });
 
@@ -127,7 +127,7 @@ serve(async (req) => {
       const data = await response.json();
       console.log('API response:', JSON.stringify(data));
 
-      const downloadUrl = data.link || data.url || data.download_url;
+      const downloadUrl = data.downloadUrl || data.link || data.url;
       const title = data.title || 'YouTube Video';
 
       if (!downloadUrl) {
